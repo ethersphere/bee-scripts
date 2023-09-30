@@ -31,12 +31,14 @@ func main() {
 		scanner   string
 		input     string
 		fullNodes bool
+		printAll  bool
 	)
 
 	flag.StringVar(&scanner, "scanner", "https://api.swarmscan.io/v1/network/dump", "the swarmscanner's url")
 	flag.IntVar(&depth, "depth", 10, "storage radius for grouping the neighborhoods")
 	flag.StringVar(&input, "i", "", "input file or stdin (leave blank to fetch the dump from the scanner)")
-	flag.BoolVar(&fullNodes, "fullNodes", true, "filter by node full nodes only")
+	flag.BoolVar(&fullNodes, "full-nodes", true, "filter by node full nodes only")
+	flag.BoolVar(&printAll, "print-all", true, "print all nodes from every neighhborhood and not just small one, <=3 nodes.")
 
 	flag.Parse()
 
@@ -126,7 +128,7 @@ func main() {
 	for _, k := range keys {
 		count := counts[k]
 		fmt.Printf("%s: %d\n", k, count)
-		if count > 0 && count < 4 {
+		if printAll || count > 0 && count < 4 {
 			for _, addr := range findNodesByNeigh(k) {
 				fmt.Println(addr)
 			}
