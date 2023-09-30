@@ -1,0 +1,7 @@
+tags=("sh.helm.release.v1.bee-0.v124" "sh.helm.release.v1.bee-0.v125" "sh.helm.release.v1.bee-0.v126" "sh.helm.release.v1.bee-0.v127" "sh.helm.release.v1.bee-0.v128" "sh.helm.release.v1.bee-0.v129" "sh.helm.release.v1.bee-0.v130" "sh.helm.release.v1.bee-0.v131" "sh.helm.release.v1.bee-0.v132" "sh.helm.release.v1.bee-0.v133" "sh.helm.release.v1.bee-1.v107" "sh.helm.release.v1.bee-1.v108" "sh.helm.release.v1.bee-1.v109" "sh.helm.release.v1.bee-1.v110" "sh.helm.release.v1.bee-1.v111" "sh.helm.release.v1.bee-1.v112" "sh.helm.release.v1.bee-1.v113" "sh.helm.release.v1.bee-1.v114" "sh.helm.release.v1.bee-1.v115" "sh.helm.release.v1.bee-1.v116" "sh.helm.release.v1.bee-2.v100" "sh.helm.release.v1.bee-2.v101" "sh.helm.release.v1.bee-2.v102" "sh.helm.release.v1.bee-2.v103" "sh.helm.release.v1.bee-2.v104" "sh.helm.release.v1.bee-2.v105" "sh.helm.release.v1.bee-2.v106" "sh.helm.release.v1.bee-2.v107" "sh.helm.release.v1.bee-2.v98" "sh.helm.release.v1.bee-2.v99" "sh.helm.release.v1.bee-3.v109" "sh.helm.release.v1.bee-3.v110" "sh.helm.release.v1.bee-3.v111" "sh.helm.release.v1.bee-3.v112" "sh.helm.release.v1.bee-3.v113" "sh.helm.release.v1.bee-3.v114" "sh.helm.release.v1.bee-3.v115" "sh.helm.release.v1.bee-3.v116" "sh.helm.release.v1.bee-3.v117" "sh.helm.release.v1.bee-3.v118") 
+
+for i in ${!tags[@]};
+do
+  tag=${tags[$i]}
+  kubectl delete secret ${tag} -n dev-bee-storage
+done
