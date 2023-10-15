@@ -25,7 +25,7 @@ PARALLEL_UPDATE=true ./testnet-update.sh storage 1.18.0-rc1
 ```
 
 ### Usual workflow
-Connect to the testnet `VPN``, set kube `context` to the `halloween` cluster and execute the following commands:
+Connect to the testnet `VPN`, set kube `context` to the `halloween` cluster and execute the following commands:
 ```
 ./testnet-update.sh bootnode $VERSION
 ./testnet-update.sh gateway $VERSION
