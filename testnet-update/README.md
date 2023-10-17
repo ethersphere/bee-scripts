@@ -23,6 +23,10 @@ Example:
 ```
 PARALLEL_UPDATE=true ./testnet-update.sh storage 1.18.0-rc1
 ```
+- update all nodes in namespace `storage` to version `1.18.0-rc1` but with using different image
+```
+IMAGE=personal-repo/bee-testnet ./testnet-update.sh storage 1.18.0-rc1
+```
 
 ### Usual workflow
 Connect to the testnet `VPN`, set kube `context` to the `halloween` cluster and execute the following commands:
