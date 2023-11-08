@@ -38,6 +38,7 @@ type ClaimTransaction struct {
 
 type winner struct {
 	Overlay string
+	Owner   string
 	Hash    string
 	Depth   int
 }
@@ -53,7 +54,7 @@ func Run(until time.Duration) {
 
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("Reward (BZZ)", "Overlay", "Country", "Block", "Time")
+	tbl := table.New("Reward (BZZ)", "Overlay", "Owner", "Country", "Block", "Time")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
 loop:
@@ -84,7 +85,7 @@ loop:
 				}
 				if e.EventType == "claim transaction" {
 					_, country, _ := util.GetStatus(e.Winner.Overlay)
-					tbl.AddRow(util.ToBZZ(big.NewFloat(0).SetInt(e.RewardAmount)), util.Trim(e.Winner.Overlay), country, e.BlockNumber, e.BlockTime)
+					tbl.AddRow(util.ToBZZ(big.NewFloat(0).SetInt(e.RewardAmount)), util.Trim(e.Winner.Overlay), e.Winner.Owner, country, e.BlockNumber, e.BlockTime)
 				}
 			}
 		}

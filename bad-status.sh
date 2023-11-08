@@ -5,14 +5,14 @@ do
     url=${list[$i]}
     result=$(curl $url/status/peers -s) 
     peers=( $(echo $result | jq -c '.snapshots[]') )
-    # peers=( $(echo $result | jq -c '.snapshots[] | select(.storageRadius != 9 or .neighborhoodSize < 1 ) ') )
+    peers=( $(echo $result | jq -c '.snapshots[] | select(.storageRadius != 10 or .neighborhoodSize < 1 ) ') )
     for j in ${!peers[@]};
     do
         peer=${peers[$j]}
         echo $peer >> bad-peers.json
-        # echo $url >> bad-peers.json
-        # overlay=$(echo $peer | jq -c '.peer' | tr -d '"')
-        # curl -s https://api.swarmscan.io/v1/network/nodes/$overlay | jq '.location.country' >> bad-peers.json
+        echo $url >> bad-peers.json
+        overlay=$(echo $peer | jq -c '.peer' | tr -d '"')
+        curl -s https://api.swarmscan.io/v1/network/nodes/$overlay | jq '.location.country' >> bad-peers.json
     done
 done
 
