@@ -5,7 +5,8 @@ do
     url=${list[$i]}
     result=$(curl $url/status/peers -s) 
     peers=( $(echo $result | jq -c '.snapshots[]') )
-    peers=( $(echo $result | jq -c '.snapshots[] | select(.storageRadius != 10 or .neighborhoodSize < 1 ) ') )
+    # peers=( $(echo $result | jq -c '.snapshots[] | select(.storageRadius != 10 or .neighborhoodSize < 1 ) ') )
+    peers=( $(echo $result | jq -c '.snapshots[] | select(.batchCommitment != 99715645440 ) ') )
     for j in ${!peers[@]};
     do
         peer=${peers[$j]}
