@@ -14,7 +14,7 @@ import (
 	"github.com/fatih/color"
 )
 
-func Run(until time.Duration) {
+func Run(untilTime time.Duration, untilRound int, countryData bool) {
 
 	var (
 		next = 0
@@ -22,7 +22,7 @@ func Run(until time.Duration) {
 		api  = "https://api.swarmscan.io/v1/redistribution/rounds"
 	)
 
-	untilT := time.Now().Add(-until)
+	untilT := time.Now().Add(-untilTime)
 
 loop:
 	for {
@@ -46,22 +46,28 @@ loop:
 		next = r.Next
 
 		for _, r := range r.Rounds {
+
+			if r.RoundNumber < untilRound {
+				break loop
+			}
+
+			if len(r.Events) > 0 && r.Events[0].BlockTime.Before(untilT) {
+				break loop
+			}
+
 			for _, e := range r.Events {
-				if e.BlockTime.Before(untilT) {
-					break loop
-				}
 				eng.process(r.RoundNumber, e)
 			}
 		}
 	}
 
-	redisStat, profitStat := eng.done()
+	redisStat, profitStat := eng.done(countryData)
 
 	fmt.Printf("%-30s%v\n", "total rounds:", redisStat.rounds)
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
-	fmt.Printf("%-30s%v\n", "zero frozen rounds:", redisStat.noFreezeRounds)
+	fmt.Printf("%-30s%v\n", "frozen rounds:", redisStat.frozenRounds)
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
-	fmt.Printf("%-30s%0.2f%%\n", "frozen rounds:", 100*(1-float64(redisStat.noFreezeRounds)/float64(redisStat.rounds)))
+	fmt.Printf("%-30s%0.2f%%\n", "frozen rounds:", 100*(float64(redisStat.frozenRounds)/float64(redisStat.rounds)))
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
 	fmt.Printf("%-30s%v\n", "minority wins:", redisStat.minorityWins)
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
@@ -146,7 +152,7 @@ type engine struct {
 
 type redisStats struct {
 	rounds              int
-	noFreezeRounds      int
+	frozenRounds        int
 	totalFreezes        int
 	totalPlayers        int
 	minorityWins        int
@@ -176,7 +182,7 @@ func (eng *engine) process(round int, e event) {
 	}
 }
 
-func (eng *engine) done() (redisStats, profitStats) {
+func (eng *engine) done(countryData bool) (redisStats, profitStats) {
 
 	keys := make([]int, 0, len(eng.rounds))
 	for k := range eng.rounds {
@@ -214,12 +220,16 @@ func (eng *engine) done() (redisStats, profitStats) {
 
 		redisStats.totalFreezes += len(r.claim.StakeFrozen)
 
-		if len(r.claim.StakeFrozen) == 0 {
-			redisStats.noFreezeRounds++
+		if len(r.claim.StakeFrozen) > 0 {
+			redisStats.frozenRounds++
 		}
 
 		for _, f := range r.claim.StakeFrozen {
 			color.Red("loser\t%s depth\t%d\n", util.Trim(f.Slashed), depth(f.Slashed, r.reveals))
+
+			if !countryData {
+				continue
+			}
 
 			unreachable, country, err := util.GetStatus(f.Slashed)
 			if err != nil {

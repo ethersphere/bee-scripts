@@ -2,9 +2,21 @@
 
 Utilizes the [swarm-scanner](https://swarmscan.io/) to output a human-readable breakdown of the storage incentives.
 
-## Usage
+## General Usage
 
 `go run main.go --since=6h --cmd=redistribution|stake|postage|reward`
+
+#### Redistribution
+
+Either time or round number can be provided as a starting point.
+```
+go run main.go --since=6h --since-round=227000 --countries=true --cmd=redistribution
+
+go run main.go --since-round=227000 --cmd=redistribution
+```
+`go run main.go --since=6h --countries=true --cmd=redistribution`
+
+`go run main.go --since-round=227000 --cmd=redistribution`
 
 The `since` flag will output events from the last `since` duration.
 
