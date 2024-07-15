@@ -2,6 +2,7 @@ package response
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 )
 
@@ -31,5 +32,5 @@ func (rl *ResponseList) PrintJsonResponse() {
 		log.Printf("Error marshalling to JSON: %v", err)
 		return
 	}
-	log.Println(string(jl))
+	fmt.Println(string(jl))
 }
