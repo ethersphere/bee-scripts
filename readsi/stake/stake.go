@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"readSI/response"
 	"readSI/util"
 	"time"
 
@@ -31,7 +32,19 @@ type postageCreate struct {
 	Overlay     string
 }
 
-func Run(until time.Duration) {
+type StakeResponse struct {
+	Owner   common.Address
+	Amount  float64
+	Country string
+	Block   uint64
+	Time    time.Time
+}
+
+type StakeResponeList struct {
+	response.ResponseList
+}
+
+func Run(until time.Duration, format string) {
 
 	var (
 		next = ""
@@ -40,10 +53,7 @@ func Run(until time.Duration) {
 
 	untilT := time.Now().Add(-until)
 
-	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
-	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("Owner", "Amount (BZZ)", "Country", "Block", "Time")
-	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	lsr := []StakeResponse{}
 
 loop:
 	for {
@@ -72,8 +82,22 @@ loop:
 			}
 
 			_, country, _ := util.GetStatus(e.Data.Overlay)
-			tbl.AddRow(e.Data.Owner, util.ToBZZ(big.NewFloat(0).SetInt(e.Data.StakeAmount)), country, e.BlockNumber, e.BlockTime)
+			lsr = append(lsr, StakeResponse{e.Data.Owner, util.ToBZZ(big.NewFloat(0).SetInt(e.Data.StakeAmount)), country, e.BlockNumber, e.BlockTime})
 		}
+	}
+
+	listResponse := StakeResponeList{ResponseList: response.ResponseList{List: lsr}}
+	response.PrintResponse(&listResponse, format)
+}
+
+func (lr *StakeResponeList) PrintTableResponse() {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Owner", "Amount (BZZ)", "Country", "Block", "Time")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+
+	for _, response := range lr.ResponseList.List.([]StakeResponse) {
+		tbl.AddRow(response.Owner, response.Amount, response.Country, response.Block, response.Time)
 	}
 
 	tbl.Print()
