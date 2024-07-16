@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"readSI/response"
 	"readSI/util"
 	"time"
 
@@ -43,7 +44,20 @@ type winner struct {
 	Depth   int
 }
 
-func Run(until time.Duration) {
+type RewardResponse struct {
+	Reward  float64
+	Overlay string
+	Owner   string
+	Country string
+	Block   uint64
+	Time    time.Time
+}
+
+type RewardResponeList struct {
+	response.ResponseList
+}
+
+func Run(until time.Duration, format string) {
 
 	var (
 		next = 0
@@ -52,10 +66,7 @@ func Run(until time.Duration) {
 
 	untilT := time.Now().Add(-until)
 
-	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
-	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("Reward (BZZ)", "Overlay", "Owner", "Country", "Block", "Time")
-	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	lrr := []RewardResponse{}
 
 loop:
 	for {
@@ -85,10 +96,27 @@ loop:
 				}
 				if e.EventType == "claim transaction" {
 					_, country, _ := util.GetStatus(e.Winner.Overlay)
-					tbl.AddRow(util.ToBZZ(big.NewFloat(0).SetInt(e.RewardAmount)), util.Trim(e.Winner.Overlay), e.Winner.Owner, country, e.BlockNumber, e.BlockTime)
+
+					lrr = append(lrr, RewardResponse{util.ToBZZ(big.NewFloat(0).SetInt(e.RewardAmount)), util.Trim(e.Winner.Overlay), e.Winner.Owner, country, e.BlockNumber, e.BlockTime})
 				}
 			}
 		}
 	}
+
+	listResponse := RewardResponeList{ResponseList: response.ResponseList{List: lrr}}
+	response.PrintResponse(&listResponse, format)
+
+}
+
+func (lr *RewardResponeList) PrintTableResponse() {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Reward (BZZ)", "Overlay", "Owner", "Country", "Block", "Time")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+
+	for _, response := range lr.ResponseList.List.([]RewardResponse) {
+		tbl.AddRow(response.Reward, response.Overlay, response.Owner, response.Country, response.Block, response.Time)
+	}
+
 	tbl.Print()
 }

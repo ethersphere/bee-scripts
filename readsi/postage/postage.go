@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"readSI/response"
 	"readSI/util"
 	"time"
 
@@ -32,7 +33,21 @@ type postageCreate struct {
 	Owner             common.Address
 }
 
-func Run(until time.Duration) {
+type PostageResponse struct {
+	Overlay           string
+	Depth             int
+	TotalAmount       float64
+	NormalisedBalance uint64
+	Country           string
+	Block             uint64
+	Time              time.Time
+}
+
+type PostageResponeList struct {
+	response.ResponseList
+}
+
+func Run(until time.Duration, format string) {
 
 	var (
 		next = ""
@@ -40,11 +55,7 @@ func Run(until time.Duration) {
 	)
 
 	untilT := time.Now().Add(-until)
-
-	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
-	columnFmt := color.New(color.FgYellow).SprintfFunc()
-	tbl := table.New("Overlay", "Depth", "Total Amount (BZZ)", "Normalized Balance", "Country", "Block", "Time")
-	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+	lpr := []PostageResponse{}
 
 loop:
 	for {
@@ -72,8 +83,21 @@ loop:
 				break loop
 			}
 			status, _ := util.GetStatusEth(e.Data.Owner.String())
-			tbl.AddRow(status.Overlay, e.Data.Depth, util.ToBZZ(big.NewFloat(0).SetInt(e.Data.TotalAmount)), e.Data.NormalisedBalance.Uint64(), status.Location.Country, e.BlockNumber, e.BlockTime)
+			lpr = append(lpr, PostageResponse{status.Overlay, e.Data.Depth, util.ToBZZ(big.NewFloat(0).SetInt(e.Data.TotalAmount)), e.Data.NormalisedBalance.Uint64(), status.Location.Country, e.BlockNumber, e.BlockTime})
 		}
+	}
+	listResponse := PostageResponeList{ResponseList: response.ResponseList{List: lpr}}
+	response.PrintResponse(&listResponse, format)
+}
+
+func (lr *PostageResponeList) PrintTableResponse() {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+	tbl := table.New("Overlay", "Depth", "Total Amount (BZZ)", "Normalized Balance", "Country", "Block", "Time")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+
+	for _, response := range lr.ResponseList.List.([]PostageResponse) {
+		tbl.AddRow(response.Overlay, response.Depth, response.TotalAmount, response.NormalisedBalance, response.Country, response.Block, response.Time)
 	}
 
 	tbl.Print()
