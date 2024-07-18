@@ -45,12 +45,12 @@ type winner struct {
 }
 
 type RewardResponse struct {
-	Reward  float64
-	Overlay string
-	Owner   string
-	Country string
-	Block   uint64
-	Time    time.Time
+	Reward  float64   `json:"reward"`
+	Overlay string    `json:"overlay"`
+	Owner   string    `json:"owner"`
+	Country string    `json:"country"`
+	Block   uint64    `json:"block"`
+	Time    time.Time `json:"time"`
 }
 
 type RewardResponeList struct {

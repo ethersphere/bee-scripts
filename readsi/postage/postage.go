@@ -34,13 +34,13 @@ type postageCreate struct {
 }
 
 type PostageResponse struct {
-	Overlay           string
-	Depth             int
-	TotalAmount       float64
-	NormalisedBalance uint64
-	Country           string
-	Block             uint64
-	Time              time.Time
+	Overlay           string    `json:"overlay"`
+	Depth             int       `json:"depth"`
+	TotalAmount       float64   `json:"totalamount"`
+	NormalisedBalance uint64    `json:"normalisedbalance"`
+	Country           string    `json:"country"`
+	Block             uint64    `json:"block"`
+	Time              time.Time `json:"time"`
 }
 
 type PostageResponeList struct {
