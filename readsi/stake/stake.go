@@ -33,11 +33,11 @@ type postageCreate struct {
 }
 
 type StakeResponse struct {
-	Owner   common.Address
-	Amount  float64
-	Country string
-	Block   uint64
-	Time    time.Time
+	Owner   common.Address `json:"owner"`
+	Amount  float64        `json:"amount"`
+	Country string         `json:"country"`
+	Block   uint64         `json:"block"`
+	Time    time.Time      `json:"time"`
 }
 
 type StakeResponeList struct {
