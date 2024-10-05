@@ -122,7 +122,7 @@ type winner struct {
 }
 
 type frozen struct {
-	Slashed string
+	Overlay string
 }
 
 type RevealTransaction struct {
@@ -225,13 +225,13 @@ func (eng *engine) done(countryData bool) (redisStats, profitStats) {
 		}
 
 		for _, f := range r.claim.StakeFrozen {
-			color.Red("loser\t%s depth\t%d\n", util.Trim(f.Slashed), depth(f.Slashed, r.reveals))
+			color.Red("loser\t%s depth\t%d\n", util.Trim(f.Overlay), depth(f.Overlay, r.reveals))
 
 			if !countryData {
 				continue
 			}
 
-			unreachable, country, err := util.GetStatus(f.Slashed)
+			unreachable, country, err := util.GetStatus(f.Overlay)
 			if err != nil {
 				continue
 			}
