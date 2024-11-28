@@ -14,13 +14,16 @@ import (
 	"github.com/fatih/color"
 )
 
-func Run(untilTime time.Duration, untilRound int, countryData bool) {
+func Run(untilTime time.Duration, untilRound int, countryData bool, testnet bool) {
 
 	var (
 		next = 0
 		eng  = engine{rounds: map[int]*roundState{}}
 		api  = "https://api.swarmscan.io/v1/redistribution/rounds"
 	)
+	if testnet {
+		api = "https://api.testnet.swarmscan.io/v1/redistribution/rounds"
+	}
 
 	untilT := time.Now().Add(-untilTime)
 

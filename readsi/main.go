@@ -18,18 +18,20 @@ func main() {
 		sinceRound  int
 		countryData bool
 		format      string
+		testnet     bool
 	)
 
 	flag.StringVar(&cmd, "cmd", "redistribution", "main cmd to run eg: 'redistribution' | 'postage' | 'stake'")
 	flag.DurationVar(&since, "since", time.Hour*24*7, "amount of time to rollback")
 	flag.IntVar(&sinceRound, "since-round", 0, "amount of rounds to rollback")
 	flag.BoolVar(&countryData, "countries", false, "display extra data about countries")
+	flag.BoolVar(&testnet, "testnet", false, "run cmd for testnet")
 	flag.StringVar(&format, "format", "table", "response format eg: 'json' | 'table' , default 'table'")
 	flag.Parse()
 
 	switch cmd {
 	case "redistribution":
-		redistribution.Run(since, sinceRound, countryData)
+		redistribution.Run(since, sinceRound, countryData, testnet)
 	case "postage":
 		postage.Run(since, format)
 	case "stake":
