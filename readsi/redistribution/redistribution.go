@@ -70,7 +70,7 @@ loop:
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
 	fmt.Printf("%-30s%v\n", "frozen rounds:", redisStat.frozenRounds)
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
-	fmt.Printf("%-30s%0.2f%%\n", "frozen rounds:", 100*(float64(redisStat.frozenRounds)/float64(redisStat.rounds)))
+	fmt.Printf("%-30s%0.2f%%\n", "frozen rounds %:", 100*(float64(redisStat.frozenRounds)/float64(redisStat.rounds)))
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
 	fmt.Printf("%-30s%v\n", "minority wins:", redisStat.minorityWins)
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
