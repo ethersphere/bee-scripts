@@ -82,6 +82,8 @@ loop:
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
 	fmt.Printf("%-30s%v\n", "total freezes:", redisStat.totalFreezes)
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
+	fmt.Printf("%-30s%v\n", "skipped reveal:", redisStat.skippedReveal)
+	fmt.Printf("%s\n", strings.Repeat("-", 45))
 	fmt.Printf("%-30s%v\n", "unreachable frozen nodes:", redisStat.frozenUnReachable)
 	fmt.Printf("%s\n", strings.Repeat("-", 45))
 	fmt.Printf("%-30s%v\n", "frozen countries:", redisStat.frozenCountries)
@@ -160,6 +162,7 @@ type redisStats struct {
 	totalPlayers        int
 	minorityWins        int
 	minorityWinsFreezes int
+	skippedReveal       int
 
 	frozenUnReachable int
 	frozenCountries   map[string]int
@@ -219,7 +222,8 @@ func (eng *engine) done(countryData bool) (redisStats, profitStats) {
 
 		fmt.Printf("round\t%d\nreveals\t%s\n", n, gstr)
 		fmt.Printf("reward\t%.2f BZZ\n", util.ToBZZ(big.NewFloat(0).SetInt(r.claim.RewardAmount)))
-		color.Green("winner\t%s depth\t%d\n", util.Trim(r.claim.Winner.Overlay), depth(r.claim.Winner.Overlay, r.reveals))
+		d, _ := depth(r.claim.Winner.Overlay, r.reveals)
+		color.Green("winner\t%s depth\t%d\n", util.Trim(r.claim.Winner.Overlay), d)
 
 		redisStats.totalFreezes += len(r.claim.StakeFrozen)
 
@@ -228,7 +232,13 @@ func (eng *engine) done(countryData bool) (redisStats, profitStats) {
 		}
 
 		for _, f := range r.claim.StakeFrozen {
-			color.Red("loser\t%s depth\t%d\n", util.Trim(f.Overlay), depth(f.Overlay, r.reveals))
+
+			if d, reveled := depth(f.Overlay, r.reveals); reveled {
+				color.Red("loser\t%s depth\t%d\n", util.Trim(f.Overlay), d)
+			} else {
+				redisStats.skippedReveal++
+				color.Red("frozen\t%s skipped reveal previous round\n", util.Trim(f.Overlay))
+			}
 
 			if !countryData {
 				continue
@@ -250,15 +260,15 @@ func (eng *engine) done(countryData bool) (redisStats, profitStats) {
 	return redisStats, pStats
 }
 
-func depth(overlay string, reveals []revealData) int {
+func depth(overlay string, reveals []revealData) (int, bool) {
 
 	for _, r := range reveals {
 		if r.Overlay == overlay {
-			return r.Depth
+			return r.Depth, true
 		}
 	}
 
-	return 0
+	return 0, false
 }
 
 func groupStr(winnerHash string, reveals []revealData) (bool, int, string) {
