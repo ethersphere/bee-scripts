@@ -11,3 +11,9 @@ helm upgrade --install beekeeper-check-public ethersphere/beekeeper --namespace 
 ```bash
 helm uninstall beekeeper-check-public --namespace beekeeper
 ```
+
+## Start Job from scheduled cronjob
+
+```bash
+kubectl create job --from=cronjob/beekeeper-checks-cronjob beekeeper-check-immediate --namespace=beekeeper
+```
