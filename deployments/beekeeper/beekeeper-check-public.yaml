@@ -37,7 +37,7 @@ config:
       "check",
       "--in-cluster=true",
       "--cluster-name=bee-testnet",
-      "--checks=pt-pingpong,pt-pushsync-chunks,pt-manifest,pt-feed",
+      "--checks=pt-pingpong,pt-pushsync-chunks,pt-manifest,pt-feed,pt-gsoc,pt-pss,pt-redundancy,pt-retrieval,pt-soc",
       "--timeout=12h",
       "--log-verbosity=debug",
       "--config-git-repo=https://github.com/ethersphere/beekeeper",
