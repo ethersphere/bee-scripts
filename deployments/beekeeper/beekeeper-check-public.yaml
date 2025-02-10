@@ -1,7 +1,7 @@
 image:
   repository: ethersphere/beekeeper
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: "beekeeper-checks"
