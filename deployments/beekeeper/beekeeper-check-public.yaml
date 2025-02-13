@@ -4,6 +4,8 @@ image:
   pullPolicy: Always
 
 imagePullSecrets: []
+additionalPodLabels:
+  log-collect: "true"
 nameOverride: "beekeeper-checks"
 fullnameOverride: "beekeeper-checks"
 
@@ -60,7 +62,7 @@ config:
   # cron job
   schedule: "30 */4 * * *" # every 4 hours at 30th minute
   successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 5
   concurrencyPolicy: Forbid
   # if it is enabled it will create init container that will wait
   # for cluster to be up and operational
