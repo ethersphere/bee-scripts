@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # --- Endpoints ---
-URL1_ENDPOINT="https://sep.swarm1.ethswarm.org/"
-URL2_ENDPOINT="https://sep.swarm1.ethswarm.org/"
-URL3_ENDPOINT="https://sep.swarm1.ethswarm.org/"
+URL1_ENDPOINT="https://sepolia.example.org/"
+URL2_ENDPOINT="https://sepolia.example.org/"
+URL3_ENDPOINT="https://sepolia.example.org/"
 
 COMMON_HEADERS="-H \"Content-Type: application/json\""
 COMMON_DATA='{ "jsonrpc":"2.0", "method":"eth_maxPriorityFeePerGas", "params":[], "id":1 }'
