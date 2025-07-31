@@ -1,4 +1,4 @@
-list=($(kubectl get ingress -n bee-testnet | grep testnet.internal | awk '{print $3}') )
+list=($(kubectl get ingress -n bee-light-testnet | grep testnet.internal | awk '{print $3}') )
 
 for i in ${!list[@]};
 do

@@ -1,9 +1,24 @@
-set -x
+#!/bin/bash
 
-list=( $(kubectl get ingress -n testnet-bootnode | grep debug | awk '{print $3}') )
+# Use passed namespace, or default to 'bee-testnet'
+NAMESPACE=${1:-bee-testnet}
 
-for i in ${!list[@]};
-do
-    url=${list[$i]}
-    curl -XDELETE $url/stake -s &
+echo "Using namespace: $NAMESPACE"
+
+counter=0
+
+# Get list of ingress hosts/IPs matching "testnet.internal" in the given namespace
+list=( $(kubectl get ingress -n "$NAMESPACE" | grep testnet.internal | awk '{print $3}') )
+
+# Loop through each and send DELETE to the /stake endpoint in background
+for url in "${list[@]}"; do
+  echo "DELETE ${url}/stake"
+  curl -XDELETE -s "${url}/stake" &
+  ((counter++))
 done
+
+# Wait for all background curls to finish
+wait
+
+# Print the total number of ingresses processed
+echo "Total ingresses processed: $counter"
