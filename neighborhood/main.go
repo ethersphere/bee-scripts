@@ -11,7 +11,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/ethersphere/bee/pkg/swarm"
+	"github.com/ethersphere/bee/v2/pkg/swarm"
 )
 
 type Dump struct {
