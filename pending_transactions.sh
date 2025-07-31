@@ -2,15 +2,15 @@
 
 # Use passed namespace, or default to 'bee-testnet'
 NAMESPACE=${1:-bee-testnet}
+DOMAIN=${2:-testnet.internal}
 
-echo "Using namespace: $NAMESPACE"
+echo "Using namespace: $NAMESPACE with domain: $DOMAIN"
+
+# Get list of ingress hosts/IPs matching "testnet.internal" in the given namespace
+list=($(kubectl get ingress -n "$NAMESPACE" | grep "$DOMAIN" | awk '{print $3}'))
 
 total_nodes_processed=0
 total_pending_transactions=0
-
-# Get list of ingress hosts/IPs matching "testnet.internal" in the given namespace
-# We're no longer pre-filtering here, but will do so inside the loop.
-list=( $(kubectl get ingress -n "$NAMESPACE" | grep testnet.internal | awk '{print $3}') )
 
 # Define the regex pattern for valid node URLs (e.g., contains bee-X-Y)
 # Note: No ^ or $ anchors as we're looking for a containment.

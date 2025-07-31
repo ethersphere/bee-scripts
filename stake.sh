@@ -2,14 +2,15 @@
 
 # Use passed namespace, or default to 'bee-testnet'
 NAMESPACE=${1:-bee-testnet}
+DOMAIN=${2:-testnet.internal}
 
-echo "Using namespace: $NAMESPACE"
+echo "Using namespace: $NAMESPACE with domain: $DOMAIN"
+
+# Get list of ingress hosts/IPs matching "testnet.internal" in the given namespace
+list=($(kubectl get ingress -n "$NAMESPACE" | grep "$DOMAIN" | awk '{print $3}'))
 
 counter=0
 stake_amount=100000000000000000
-
-# Get list of ingress hosts/IPs matching "testnet.internal" in the given namespace
-list=( $(kubectl get ingress -n "$NAMESPACE" | grep testnet.internal | awk '{print $3}') )
 
 # Loop through each and send POST to /stake/<amount>
 for url in "${list[@]}"; do
