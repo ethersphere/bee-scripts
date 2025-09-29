@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# This script retrieves wallet balances from multiple Bee nodes in a specified Kubernetes namespace.
+# It requires 'kubectl', 'curl', and 'jq' to be installed on the system.
+# Usage: ./wallet-get.sh [NAMESPACE] [DOMAIN]
+# Example: ./wallet-get.sh bee-testnet testnet.internal
+
 # Use passed namespace, or default to 'bee-testnet'
 NAMESPACE=${1:-bee-testnet}
 DOMAIN=${2:-testnet.internal}

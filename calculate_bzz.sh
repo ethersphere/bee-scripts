@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# This script calculates the amount of BZZ required to fund a postage stamp
+# for a specified duration and depth using data fetched from a Bee node's
+# chainstate endpoint.
+# It retrieves the current postage stamp price from the Bee node's ingress
+# and performs the necessary calculations.
+# Requirements:
+# - kubectl
+# - curl
+# - jq
+# - bc  
+# Usage: ./calculate_bzz.sh [namespace] [hours] [depth] [blocktime]
+# Example: ./calculate_bzz.sh bee-testnet 24 22 12
+
 # Default values
 DEFAULT_NAMESPACE="bee-testnet"
 DEFAULT_HOURS=24
@@ -55,13 +68,19 @@ echo "🧮 Calculating required BZZ amount..."
 # 'scale=4' sets the precision to 4 decimal places.
 # '2^$DEPTH' is the 'bc' equivalent of '1<<$DEPTH'.
 # '10^16' is used for '1e16'.
-BZZ_REQUIRED=$(bc -l <<EOF
+CALCULATION_RESULT=$(bc -l <<EOF
     scale=4
     amount = (${HOURS} * 60 * 60 / ${BLOCKTIME}) * ${CURRENT_PRICE}
     bzz_price = (amount * (2^${DEPTH})) / (10^16)
-    bzz_price
+    print amount, " ", bzz_price
 EOF
 )
 
+# Parse the results
+AMOUNT_PLUR=$(echo "$CALCULATION_RESULT" | awk '{print $1}')
+BZZ_REQUIRED=$(echo "$CALCULATION_RESULT" | awk '{print $2}')
+
 # --- Step 4: Display the result ---
-printf "\n✨ To fund a postage stamp for %d hours at depth %d, you need approximately: %.4f BZZ\n" "$HOURS" "$DEPTH" "$BZZ_REQUIRED"
+printf "\n✨ To fund a postage stamp for %d hours at depth %d:\n" "$HOURS" "$DEPTH"
+printf "   Amount in PLUR: %.0f\n" "$AMOUNT_PLUR"
+printf "   Amount in BZZ:  %.4f\n" "$BZZ_REQUIRED"

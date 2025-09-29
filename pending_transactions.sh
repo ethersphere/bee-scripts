@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# This script retrieves and counts pending transactions from multiple Bee nodes in a specified Kubernetes namespace.
+# It requires 'kubectl', 'curl', and 'jq' to be installed on the system.
+# Usage: ./pending_transactions.sh [NAMESPACE] [DOMAIN]
+# Example: ./pending_transactions.sh bee-testnet testnet.internal
+
 # Use passed namespace, or default to 'bee-testnet'
 NAMESPACE=${1:-bee-testnet}
 DOMAIN=${2:-testnet.internal}

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# This script deletes stake information from multiple Bee nodes in a specified Kubernetes namespace.
+# It requires 'kubectl' and 'curl' to be installed on the system. 
+# Usage: ./stake-del.sh [NAMESPACE] [DOMAIN]
+# Example: ./stake-del.sh bee-testnet testnet.internal
+
 # Use passed namespace, or default to 'bee-testnet'
 NAMESPACE=${1:-bee-testnet}
 DOMAIN=${2:-testnet.internal}
