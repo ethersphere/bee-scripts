@@ -10,8 +10,9 @@
 # - curl
 # - jq
 # - bc  
-# Usage: ./calculate_bzz.sh [namespace] [hours] [depth] [blocktime]
+# Usage: ./calculate_bzz.sh [namespace] [hours] [depth] [blocktime] [static_endpoint]
 # Example: ./calculate_bzz.sh bee-testnet 24 22 12
+# Example with static endpoint: ./calculate_bzz.sh bee-testnet 24 22 12 https://bee-node.example.com
 
 # Default values
 DEFAULT_NAMESPACE="bee-testnet"
@@ -24,23 +25,34 @@ NAMESPACE=${1:-$DEFAULT_NAMESPACE}
 HOURS=${2:-$DEFAULT_HOURS}
 DEPTH=${3:-$DEFAULT_DEPTH}
 BLOCKTIME=${4:-$DEFAULT_BLOCKTIME}
+STATIC_ENDPOINT=${5:-""}
 
 echo "📝 Using Configuration:"
 echo "   Namespace:  $NAMESPACE"
 echo "   Hours:      $HOURS"
 echo "   Depth:      $DEPTH"
 echo "   Block Time: $BLOCKTIME seconds"
+if [ -n "$STATIC_ENDPOINT" ]; then
+    echo "   Static Endpoint: $STATIC_ENDPOINT"
+else
+    echo "   Endpoint: Querying k8s cluster"
+fi
 echo "---"
 
-# --- Step 1: Find the first ingress URL ---
-echo "🔎 Finding the first ingress in namespace '$NAMESPACE'..."
-URL=$(kubectl get ingress -n "$NAMESPACE" --no-headers -o custom-columns=":spec.rules[0].host" | grep 'testnet.internal' | head -n 1)
-
-if [ -z "$URL" ]; then
-  echo "❌ Error: Could not find any ingress matching 'testnet.internal' in namespace '$NAMESPACE'."
-  exit 1
+# --- Step 1: Determine endpoint URL ---
+if [ -n "$STATIC_ENDPOINT" ]; then
+  echo "🔗 Using static endpoint: $STATIC_ENDPOINT"
+  URL="$STATIC_ENDPOINT"
+else
+  echo "🔎 Finding the first ingress in namespace '$NAMESPACE'..."
+  URL=$(kubectl get ingress -n "$NAMESPACE" --no-headers -o custom-columns=":spec.rules[0].host" | grep 'testnet.internal' | head -n 1)
+  
+  if [ -z "$URL" ]; then
+    echo "❌ Error: Could not find any ingress matching 'testnet.internal' in namespace '$NAMESPACE'."
+    exit 1
+  fi
+  echo "✅ Found ingress: $URL"
 fi
-echo "✅ Found ingress: $URL"
 
 # --- Step 2: Fetch chainstate data ---
 echo "🌐 Fetching chainstate data from ${URL}/chainstate..."
