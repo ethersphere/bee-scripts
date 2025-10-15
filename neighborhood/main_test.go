@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/ethersphere/bee/v2/pkg/swarm"
+	"github.com/ethersphere/bee/pkg/swarm"
 )
 
 func TestXXX(t *testing.T) {

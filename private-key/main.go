@@ -7,8 +7,8 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/ethersphere/bee/v2/pkg/crypto"
-	filekeystore "github.com/ethersphere/bee/v2/pkg/keystore/file"
+	"github.com/ethersphere/bee/pkg/crypto"
+	filekeystore "github.com/ethersphere/bee/pkg/keystore/file"
 )
 
 func main() {
