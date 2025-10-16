@@ -3,56 +3,38 @@
 # This script calculates the amount of BZZ required to fund a postage stamp
 # for a specified duration and depth using data fetched from a Bee node's
 # chainstate endpoint.
-# It retrieves the current postage stamp price from the Bee node's ingress
+# It retrieves the current postage stamp price from the Bee node endpoint
 # and performs the necessary calculations.
 # Requirements:
-# - kubectl
 # - curl
 # - jq
 # - bc  
-# Usage: ./calculate_bzz.sh [namespace] [hours] [depth] [blocktime] [static_endpoint]
-# Example: ./calculate_bzz.sh bee-testnet 24 22 12
-# Example with static endpoint: ./calculate_bzz.sh bee-testnet 24 22 12 https://bee-node.example.com
+# Usage: ./calculate_bzz.sh [endpoint] [hours] [depth] [blocktime]
+# Example: ./calculate_bzz.sh localhost:1633 24 22 12
+# Example: ./calculate_bzz.sh bee-node.example.com:1633 24 22 12
 
 # Default values
-DEFAULT_NAMESPACE="bee-testnet"
 DEFAULT_HOURS=24
 DEFAULT_DEPTH=22
 DEFAULT_BLOCKTIME=12
+DEFAULT_ENDPOINT="localhost:1633"
 
 # Use passed arguments or defaults
-NAMESPACE=${1:-$DEFAULT_NAMESPACE}
+ENDPOINT=${1:-$DEFAULT_ENDPOINT}
 HOURS=${2:-$DEFAULT_HOURS}
 DEPTH=${3:-$DEFAULT_DEPTH}
 BLOCKTIME=${4:-$DEFAULT_BLOCKTIME}
-STATIC_ENDPOINT=${5:-""}
 
 echo "📝 Using Configuration:"
-echo "   Namespace:  $NAMESPACE"
 echo "   Hours:      $HOURS"
 echo "   Depth:      $DEPTH"
 echo "   Block Time: $BLOCKTIME seconds"
-if [ -n "$STATIC_ENDPOINT" ]; then
-    echo "   Static Endpoint: $STATIC_ENDPOINT"
-else
-    echo "   Endpoint: Querying k8s cluster"
-fi
+echo "   Endpoint:   http://$ENDPOINT"
 echo "---"
 
-# --- Step 1: Determine endpoint URL ---
-if [ -n "$STATIC_ENDPOINT" ]; then
-  echo "🔗 Using static endpoint: $STATIC_ENDPOINT"
-  URL="$STATIC_ENDPOINT"
-else
-  echo "🔎 Finding the first ingress in namespace '$NAMESPACE'..."
-  URL=$(kubectl get ingress -n "$NAMESPACE" --no-headers -o custom-columns=":spec.rules[0].host" | grep 'testnet.internal' | head -n 1)
-  
-  if [ -z "$URL" ]; then
-    echo "❌ Error: Could not find any ingress matching 'testnet.internal' in namespace '$NAMESPACE'."
-    exit 1
-  fi
-  echo "✅ Found ingress: $URL"
-fi
+# --- Step 1: Build endpoint URL ---
+echo "🔗 Using endpoint: $ENDPOINT"
+URL="http://$ENDPOINT"
 
 # --- Step 2: Fetch chainstate data ---
 echo "🌐 Fetching chainstate data from ${URL}/chainstate..."
