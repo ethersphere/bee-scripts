@@ -68,12 +68,25 @@ echo "Unique neighborhoods: ${#unique_neighborhoods[@]}"
 
 if [ ${#unique_neighborhoods[@]} -gt 0 ]; then
   echo ""
-  echo "🔍 UNIQUE NEIGHBORHOODS:"
+  echo "🔍 UNIQUE NEIGHBORHOODS (as integers):"
   for i in "${!unique_neighborhoods[@]}"; do
     neighborhood="${unique_neighborhoods[$i]}"
-    # Truncate long neighborhood IDs for display
-    display_id="${neighborhood:0:20}..."
-    echo "  $((i+1)). $display_id"
+    # Convert binary string to integer
+    if [[ "$neighborhood" =~ ^[01]+$ ]]; then
+      # Convert binary to decimal using bc for large numbers
+      decimal_value=$(echo "ibase=2; $neighborhood" | bc 2>/dev/null)
+      if [ $? -eq 0 ] && [ -n "$decimal_value" ]; then
+        # Convert back to binary to show the full representation
+        binary_representation=$(echo "obase=2; $decimal_value" | bc 2>/dev/null)
+        echo "  $((i+1)). $decimal_value (binary: $binary_representation)"
+      else
+        # Fallback to original binary if conversion fails
+        echo "  $((i+1)). $neighborhood"
+      fi
+    else
+      # For non-binary strings, show as-is
+      echo "  $((i+1)). $neighborhood"
+    fi
   done
 fi
 
