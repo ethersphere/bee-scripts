@@ -17,6 +17,7 @@ list=($(kubectl get ingress -n "$NAMESPACE" | grep "$DOMAIN" | awk '{print $3}')
 counter=0
 total_neighborhoods=0
 unique_neighborhoods=()
+declare -A neighborhood_counts
 
 echo "Fetching neighborhoods from all ingress endpoints..."
 echo "=================================================="
@@ -47,13 +48,16 @@ for url in "${list[@]}"; do
   
   echo "  📊 Found $neighborhood_count neighborhoods"
   
-  # Extract unique neighborhood identifiers
+  # Extract unique neighborhood identifiers and count occurrences
   while IFS= read -r neighborhood; do
     if [ -n "$neighborhood" ]; then
       # Check if this neighborhood is already in our unique list
       if [[ ! " ${unique_neighborhoods[@]} " =~ " ${neighborhood} " ]]; then
         unique_neighborhoods+=("$neighborhood")
+        neighborhood_counts["$neighborhood"]=0
       fi
+      # Increment count for this neighborhood
+      ((neighborhood_counts["$neighborhood"]++))
     fi
   done <<< "$(echo "$json_data" | jq -r '.neighborhoods[].neighborhood')"
   
@@ -76,16 +80,18 @@ if [ ${#unique_neighborhoods[@]} -gt 0 ]; then
       # Convert binary to decimal using bc for large numbers
       decimal_value=$(echo "ibase=2; $neighborhood" | bc 2>/dev/null)
       if [ $? -eq 0 ] && [ -n "$decimal_value" ]; then
-        # Convert back to binary to show the full representation
-        binary_representation=$(echo "obase=2; $decimal_value" | bc 2>/dev/null)
-        echo "  $((i+1)). $decimal_value (binary: $binary_representation)"
+        # Get the count of nodes in this neighborhood
+        node_count=${neighborhood_counts["$neighborhood"]}
+        echo "  $((i+1)). $decimal_value (nodes: $node_count)"
       else
         # Fallback to original binary if conversion fails
-        echo "  $((i+1)). $neighborhood"
+        node_count=${neighborhood_counts["$neighborhood"]}
+        echo "  $((i+1)). $neighborhood (nodes: $node_count)"
       fi
     else
       # For non-binary strings, show as-is
-      echo "  $((i+1)). $neighborhood"
+      node_count=${neighborhood_counts["$neighborhood"]}
+      echo "  $((i+1)). $neighborhood (nodes: $node_count)"
     fi
   done
 fi
