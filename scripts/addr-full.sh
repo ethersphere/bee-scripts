@@ -3,6 +3,7 @@
 # Use passed namespace, or default to 'bee-testnet'
 NAMESPACE=${1:-bee-testnet}
 DOMAIN=${2:-testnet.internal}
+SEARCH=${3:-}
 
 # Get list of ingress hosts/IPs matching "testnet.internal" in the given namespace
 list=($(kubectl get ingress -n "$NAMESPACE" | grep "$DOMAIN" | awk '{print $3}'))
@@ -41,7 +42,8 @@ json_array+="]"
 # Sort by ingress name, then deduplicate by overlay address
 # Prefer non-load balancer entries (those with pattern bee-X-Y, not bee-X)
 # Wrap in JSON object with count and results array
-echo "$json_array" | jq '
+# Filter by SEARCH if provided (searches in overlay and underlay)
+echo "$json_array" | jq --arg search "$SEARCH" '
   sort_by(.ingress) |
   group_by(.overlay) |
   map(
@@ -55,5 +57,15 @@ echo "$json_array" | jq '
     end
   ) |
   sort_by(.ingress) |
+  # Apply search filter if provided
+  if $search != "" then
+    map(select(
+      (.overlay | tostring | contains($search)) or
+      (.underlay | tostring | contains($search)) or
+      (.ethereum | tostring | contains($search))
+    ))
+  else
+    .
+  end |
   {count: length, results: .}
 '
