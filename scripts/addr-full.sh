@@ -38,6 +38,22 @@ done
 
 json_array+="]"
 
-# Deduplicate by overlay address (since some ingresses are load balancing)
+# Sort by ingress name, then deduplicate by overlay address
+# Prefer non-load balancer entries (those with pattern bee-X-Y, not bee-X)
 # Wrap in JSON object with count and results array
-echo "$json_array" | jq 'group_by(.overlay) | map(.[0]) | {count: length, results: .}'
+echo "$json_array" | jq '
+  sort_by(.ingress) |
+  group_by(.overlay) |
+  map(
+    # Prefer non-load balancer (has pattern bee-X-Y.lightnet, not bee-X.lightnet)
+    if (map(.ingress | test("^bee-\\d+-\\d+\\.")) | any) then
+      # If any entry is a non-load balancer, prefer those
+      map(select(.ingress | test("^bee-\\d+-\\d+\\."))) | .[0]
+    else
+      # Otherwise, take the first one
+      .[0]
+    end
+  ) |
+  sort_by(.ingress) |
+  {count: length, results: .}
+'
