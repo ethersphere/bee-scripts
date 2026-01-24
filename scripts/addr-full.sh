@@ -15,7 +15,22 @@ first=true
 for i in ${!list[@]};
 do
     url=${list[$i]}
-    response=$(curl -s "$url/addresses")
+    
+    # Try to get response with timeout and error handling
+    response=$(curl -s --max-time 10 --fail "$url/addresses" 2>&1)
+    curl_exit_code=$?
+    
+    # Check if curl failed
+    if [ $curl_exit_code -ne 0 ]; then
+        echo "Error: Failed to reach endpoint $url (curl exit code: $curl_exit_code)" >&2
+        continue
+    fi
+    
+    # Validate JSON response
+    if ! echo "$response" | jq empty 2>/dev/null; then
+        echo "Error: Invalid JSON response from endpoint $url" >&2
+        continue
+    fi
     
     # Extract only overlay, underlay, and ethereum from the response
     overlay=$(echo "$response" | jq -r '.overlay // empty')
