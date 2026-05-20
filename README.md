@@ -62,5 +62,4 @@ Run any script without args to see defaults; most accept `[NAMESPACE] [DOMAIN]`.
 
 ## Maintainers
 
-- bee team
-- [@gacevicljubisa](https://github.com/gacevicljubisa)
+- [Bee](https://github.com/orgs/ethersphere/teams/bee) team
