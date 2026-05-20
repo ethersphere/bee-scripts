@@ -59,3 +59,8 @@ Run any script without args to see defaults; most accept `[NAMESPACE] [DOMAIN]`.
 - `secrets.sh`, `tag.sh` — bulk delete helm-release secrets / git tags
 - `deltrx.sh` — cancel pending transactions
 - `split.sh`, `rchash.sh`, `parallel_rpc_requests.sh`
+
+## Maintainers
+
+- bee team
+- [@gacevicljubisa](https://github.com/gacevicljubisa)
