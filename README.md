@@ -4,6 +4,8 @@ Scripts and small Go programs used by the Bee team to debug and operate Swarm te
 
 Most shell scripts target Bee nodes running in a Kubernetes namespace and discover hosts via `kubectl get ingress`. They typically accept `NAMESPACE` and `DOMAIN` as the first arguments.
 
+Some scripts have a `*-pf.sh` variant that reaches nodes via `kubectl port-forward` instead of ingress (useful when no ingress is exposed). These open a local forward to one node at a time, run the request, then close it and wait for the local port to free before the next node. The shared open/close-and-wait logic lives in [`scripts/lib/portforward.sh`](scripts/lib/portforward.sh); the `*-pf.sh` scripts take `[NAMESPACE] [LOCAL_PORT] [API_PORT]` (defaults `11633` / `1633`) in place of a domain.
+
 ## Layout
 
 - [`scripts/`](scripts) — Bash utilities (see categories below)
@@ -15,7 +17,7 @@ Most shell scripts target Bee nodes running in a Kubernetes namespace and discov
 
 ## Requirements
 
-`kubectl`, `curl`, `jq`, `bc`, and Go 1.21+ for the programs under `neighborhood/`, `readsi/`, `private-key/`, `sharky-bits/`.
+`kubectl`, `curl`, `jq`, `bc` (plus `lsof` for the `*-pf.sh` port-forward variants), and Go 1.21+ for the programs under `neighborhood/`, `readsi/`, `private-key/`, `sharky-bits/`.
 
 ## Scripts overview
 
@@ -23,17 +25,18 @@ Run any script without args to see defaults; most accept `[NAMESPACE] [DOMAIN]`.
 
 ### Node info & health
 
-- `addr.sh`, `addr-full.sh` — overlay/ethereum addresses per node
+- `addr.sh`, `addr-full.sh` — overlay/ethereum addresses per node (`addr-pf.sh` for the port-forward variant)
 - `status.sh`, `status-peers.sh`, `bad-status.sh` — `/status` snapshot and peer counts
 - `reachable.sh` — checks `isReachable`
 - `overlay.sh`, `topology.sh`, `neighborhoods.sh` — overlay, topology, neighborhood depth
 - `blocklist.sh`, `check-peers-overlay.sh` — peer/overlay lookups
-- `wallet-get.sh`, `pending_transactions.sh`
+- `wallet-get.sh` — wallet balances per node (`wallet-get-pf.sh` for the port-forward variant)
+- `pending_transactions.sh`
 
 ### Chequebook & funds
 
-- `chequebook-balance-get.sh` — flags nodes below the 11 BZZ threshold
-- `chequebook-deposit.sh` — deposit a fixed amount, or `--topup-to` a target balance
+- `chequebook-balance-get.sh` — flags nodes below the 11 BZZ threshold (`chequebook-balance-get-pf.sh` for the port-forward variant)
+- `chequebook-deposit.sh` — deposit a fixed amount, or `--topup-to` a target balance (`chequebook-deposit-pf.sh` for the port-forward variant)
 - `chequebook-cashout-withdraw.sh` — cash out cheques and withdraw before nuking
 - `cashout.sh`, `deposit.sh`
 
