@@ -37,6 +37,8 @@ fi
 
 counter=0
 for pod in "${pods[@]}"; do
+  pf_aborted && { echo "Stopping early (cancellation requested)."; break; }
+
   # Opens the forward, GETs /wallet, then closes and waits for the port to free.
   json_data=$(pf_query "$NAMESPACE" "$pod" "$LOCAL_PORT" "$API_PORT" "/wallet")
 

@@ -48,6 +48,25 @@ pf_list_nodes() {
 # Internal state.
 PF_PID=""
 PF_LOCAL_PORT=""
+PF_ABORT=0
+
+# pf_aborted -> success (0) once a cancellation signal (Ctrl-C / TERM) has been received.
+# Loops should check this and `break` so the whole run stops, not just one iteration:
+#   for pod in "${pods[@]}"; do pf_aborted && break; ...; done
+pf_aborted() { [[ "$PF_ABORT" == "1" ]]; }
+
+# Signal handler for INT/TERM. Records the cancellation so loops stop before the next node
+# and the in-flight wait loops bail promptly; the active forward is torn down by the EXIT
+# trap (or the next pf_close). A second interrupt forces an immediate exit.
+pf_on_cancel() {
+  if pf_aborted; then
+    echo "pf: second interrupt — exiting now." >&2
+    exit 130
+  fi
+  PF_ABORT=1
+  echo "" >&2
+  echo "pf: cancellation requested — stopping after the current node (Ctrl-C again to force quit)." >&2
+}
 
 # pf_port_in_use <port> -> 0 if something is LISTENing on the port, 1 otherwise.
 pf_port_in_use() {
@@ -66,6 +85,7 @@ pf_close() {
   [[ -z "$PF_LOCAL_PORT" ]] && return 0
   local tries=0
   while pf_port_in_use "$PF_LOCAL_PORT"; do
+    pf_aborted && break   # don't block on port-release while cancelling
     sleep 0.2
     ((tries++))
     if ((tries > PF_FREE_TRIES)); then
@@ -81,6 +101,8 @@ pf_close() {
 pf_open() {
   local namespace=$1 pod=$2 local_port=$3 api_port=$4
 
+  pf_aborted && return 1   # don't start new forwards once cancelling
+
   if pf_port_in_use "$local_port"; then
     echo "pf: error: local port $local_port already in use before forwarding to $pod" >&2
     return 1
@@ -92,6 +114,7 @@ pf_open() {
 
   local tries=0
   until curl -s -o /dev/null --max-time 2 "http://localhost:$local_port$PF_HEALTH_PATH"; do
+    pf_aborted && return 1                       # stop waiting if cancelling
     # Bail if the forward process died (pod not ready, wrong port, etc.).
     kill -0 "$PF_PID" 2>/dev/null || return 1
     sleep 0.2
@@ -122,5 +145,8 @@ pf_query() {
   return $status
 }
 
-# Guarantee no dangling forward survives the sourcing script (Ctrl-C, error, normal exit).
-trap pf_close EXIT INT TERM
+# Guarantee no dangling forward survives the sourcing script (error, normal exit, or a
+# forced second Ctrl-C). INT/TERM record the cancellation (pf_on_cancel) so loops stop
+# cleanly via pf_aborted, while the active forward is still torn down on the way out.
+trap pf_close EXIT
+trap pf_on_cancel INT TERM

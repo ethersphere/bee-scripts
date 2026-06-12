@@ -27,6 +27,8 @@ if [ ${#pods[@]} -eq 0 ]; then
 fi
 
 for pod in "${pods[@]}"; do
+    pf_aborted && { echo "Stopping early (cancellation requested)."; break; }
+
     # Opens the forward, GETs /addresses, then closes and waits for the port to free.
     json_data=$(pf_query "$NAMESPACE" "$pod" "$LOCAL_PORT" "$API_PORT" "/addresses")
 

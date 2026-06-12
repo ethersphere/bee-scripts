@@ -10,6 +10,8 @@
 #   --topup-to: treat <amount> as a target total balance; fetch each node's current
 #               balance and deposit only the difference needed to reach that target.
 #   LOCAL_PORT / API_PORT may be overridden via environment (defaults 11633 / 1633).
+#   For parity with the non-pf sibling, a legacy <domain> arg between <namespace> and
+#   <amount> is accepted and ignored (nodes are discovered by label, not ingress).
 # Example: ./chequebook-deposit-pf.sh bee-testnet 117000000
 # Example: LOCAL_PORT=12000 ./chequebook-deposit-pf.sh bee-testnet 117000000 --topup-to
 
@@ -18,9 +20,24 @@ set -uo pipefail
 source "$(dirname "$0")/lib/portforward.sh"
 
 NAMESPACE=${1:-}
-AMOUNT=${2:-}
+
+# This variant takes no domain (nodes are discovered by label), but the non-pf sibling
+# uses "<namespace> <domain> <amount>". Accept that legacy order too: if the 2nd arg
+# isn't the amount but the 3rd is, treat the 2nd as an (ignored) domain.
+if [[ "${2:-}" =~ ^[0-9]+$ ]]; then
+    AMOUNT=${2:-}
+    FLAG=${3:-}
+elif [[ -n "${2:-}" && "${3:-}" =~ ^[0-9]+$ ]]; then
+    echo "Note: ignoring '$2' — this variant takes no domain (nodes found by label)." >&2
+    AMOUNT=${3}
+    FLAG=${4:-}
+else
+    AMOUNT=${2:-}      # empty or invalid; caught by validation below
+    FLAG=${3:-}
+fi
+
 TOPUP_TO=false
-[ "${3:-}" = "--topup-to" ] && TOPUP_TO=true
+[ "$FLAG" = "--topup-to" ] && TOPUP_TO=true
 
 LOCAL_PORT=${LOCAL_PORT:-11633}   # local side of the forward; defaults high to avoid clobbering a local node
 API_PORT=${API_PORT:-1633}        # Bee API port inside the pod
@@ -30,6 +47,7 @@ if [ -z "$NAMESPACE" ] || [ -z "$AMOUNT" ]; then
     echo "  amount      deposit amount, or target balance when --topup-to is set"
     echo "  --topup-to  fetch current balance per node and deposit only the difference"
     echo "  LOCAL_PORT / API_PORT overridable via env (defaults 11633 / 1633)"
+    echo "  (a legacy <domain> arg between namespace and amount is accepted and ignored)"
     echo "Example: $0 bee-testnet 117000000"
     echo "Example: $0 bee-testnet 117000000 --topup-to"
     exit 1
@@ -130,6 +148,8 @@ process_node() {
 }
 
 for pod in "${pods[@]}"; do
+    pf_aborted && { echo "Stopping early (cancellation requested); summarising what ran so far."; echo ""; break; }
+
     echo "Processing: $pod"
 
     if ! pf_open "$NAMESPACE" "$pod" "$LOCAL_PORT" "$API_PORT"; then
