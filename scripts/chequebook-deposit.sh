@@ -3,8 +3,10 @@
 # Description: Executes POST request to /chequebook/deposit endpoint for each node in the namespace.
 
 # Usage: ./chequebook-deposit.sh <namespace> <domain> <amount> [--topup-to]
-#   --topup-to: treat <amount> as a target total balance; fetch each node's current
-#               balance and deposit only the difference needed to reach that target.
+#   --topup-to: treat <amount> as a target available balance; fetch each node's current
+#               available balance and deposit only the difference needed to reach that
+#               target. Available (not total) balance is used so funds already committed
+#               to uncashed cheques don't count toward the target, keeping nodes spendable.
 
 NAMESPACE=${1:-}
 DOMAIN=${2:-}
@@ -17,8 +19,8 @@ fi
 
 if [ -z "$NAMESPACE" ] || [ -z "$DOMAIN" ] || [ -z "$AMOUNT" ]; then
     echo "Usage: $0 <namespace> <domain> <amount> [--topup-to]"
-    echo "  amount      deposit amount, or target balance when --topup-to is set"
-    echo "  --topup-to  fetch current balance per node and deposit only the difference"
+    echo "  amount      deposit amount, or target available balance when --topup-to is set"
+    echo "  --topup-to  fetch current available balance per node and deposit only the difference"
     echo "Example: $0 bee-testnet testnet.internal 117000000"
     echo "Example: $0 bee-testnet testnet.internal 117000000 --topup-to"
     exit 1
@@ -63,7 +65,7 @@ for url in "${list[@]}"; do
             continue
         fi
 
-        current_balance=$(echo "$balance_json" | jq -r '.totalBalance // "0"')
+        current_balance=$(echo "$balance_json" | jq -r '.availableBalance // "0"')
         if ! [[ "$current_balance" =~ ^[0-9]+$ ]]; then
             all_results+=("{\"ingress\":\"$url\",\"status\":\"error\",\"error\":\"balance_parse_failed\"}")
             echo "  ✗ Error: Could not parse balance response"

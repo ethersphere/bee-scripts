@@ -42,7 +42,7 @@ Run any script without args to see defaults; most accept `[NAMESPACE] [DOMAIN]`.
 
 ### Stake
 
-- `stake.sh`, `stake-get.sh`, `stake-del.sh`
+- `stake.sh`, `stake-get.sh` (`stake-get-pf.sh` for the port-forward variant), `stake-del.sh`
 
 ### Stamps & chunks
 

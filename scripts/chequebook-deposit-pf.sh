@@ -7,8 +7,10 @@
 #
 # Requires: kubectl, curl, jq, lsof.
 # Usage: ./chequebook-deposit-pf.sh <namespace> <amount> [--topup-to]
-#   --topup-to: treat <amount> as a target total balance; fetch each node's current
-#               balance and deposit only the difference needed to reach that target.
+#   --topup-to: treat <amount> as a target available balance; fetch each node's current
+#               available balance and deposit only the difference needed to reach that
+#               target. Available (not total) balance is used so funds already committed
+#               to uncashed cheques don't count toward the target, keeping nodes spendable.
 #   LOCAL_PORT / API_PORT may be overridden via environment (defaults 11633 / 1633).
 #   For parity with the non-pf sibling, a legacy <domain> arg between <namespace> and
 #   <amount> is accepted and ignored (nodes are discovered by label, not ingress).
@@ -44,8 +46,8 @@ API_PORT=${API_PORT:-1633}        # Bee API port inside the pod
 
 if [ -z "$NAMESPACE" ] || [ -z "$AMOUNT" ]; then
     echo "Usage: $0 <namespace> <amount> [--topup-to]"
-    echo "  amount      deposit amount, or target balance when --topup-to is set"
-    echo "  --topup-to  fetch current balance per node and deposit only the difference"
+    echo "  amount      deposit amount, or target available balance when --topup-to is set"
+    echo "  --topup-to  fetch current available balance per node and deposit only the difference"
     echo "  LOCAL_PORT / API_PORT overridable via env (defaults 11633 / 1633)"
     echo "  (a legacy <domain> arg between namespace and amount is accepted and ignored)"
     echo "Example: $0 bee-testnet 117000000"
@@ -93,7 +95,7 @@ process_node() {
             return
         fi
 
-        current_balance=$(echo "$balance_json" | jq -r '.totalBalance // "0"')
+        current_balance=$(echo "$balance_json" | jq -r '.availableBalance // "0"')
         if ! [[ "$current_balance" =~ ^[0-9]+$ ]]; then
             all_results+=("{\"pod\":\"$pod\",\"status\":\"error\",\"error\":\"balance_parse_failed\"}")
             echo "  ✗ Error: Could not parse balance response"
